@@ -2,16 +2,22 @@ import dayjs from 'dayjs';
 import _ from 'lodash';
 
 const MIN_REST = 8 * 60;
-const END_DAYS = 4;
+const END_DAYS = 1;
 const TIME_FORMAT = 'hh:mm';
 const MAX_SHIFT_TIME = 7200;
 const CONSIDERED_LAST_SHIFTS = 24;
 
 const WEIGHT_REST = 1;
-const WEIGHT_SAME_PERSON = -5;
+const WEIGHT_SAME_PERSON = -4;
 const WEIGHT_SAME_HOUR = -4;
 
 const setHour = (date, h) => date.set('h', h).set('m', 0).set('s', 0).set('ms', 0);
+
+// add metrics
+// count rest periods between shifts
+// max, min global colored in the rest period matrix
+// total per person
+// average per person
 
 const stations = [
   {
@@ -54,30 +60,34 @@ const validShift = (shifts, onDuty) => {
 
 const getCost = ({ person, shifts, startTime, minPeople, onDuty }) => {
   const lastShifts = _.filter(_.take(_.reverse(_.cloneDeep(shifts)), CONSIDERED_LAST_SHIFTS), (shift) => {
-    return !!shift.onDuty.includes(person);
+    return !!_.find(shift.onDuty, { id: person.id });
   });
-  if (onDuty.includes(person)) return -100000;
-  if (!lastShifts.length) return 100000;
+  if (_.find(onDuty, { id: person.id })) return { cost: -Infinity, restPeriod: 0 };
+  if (!lastShifts.length) return { cost: Infinity, restPeriod: Infinity };
   const shiftTime = 4;
   const restPeriod = startTime.diff(lastShifts[0].startTime, 'h') - shiftTime; // heighest weight
   const sameShiftHour = startTime.get('h') === lastShifts[0].startTime.get('h');
-  const sameShiftPersons = onDuty.length < minPeople ? lastShifts.find((s) => s.onDuty.includes(onDuty[0])) : false;
+  const sameShiftPersons =
+    onDuty.length < minPeople && onDuty.length > 0
+      ? _.find(lastShifts, (s) => _.find(s.onDuty, { id: onDuty[0].id }))
+      : false;
   // const totalRestTime = 0 // TODO v2: sum time between shifts
 
   const restCost = restPeriod * WEIGHT_REST;
   const sameHourCost = sameShiftHour ? WEIGHT_SAME_HOUR : 0;
   const samePersonCost = sameShiftPersons ? WEIGHT_SAME_PERSON : 0;
 
-  return restCost + sameHourCost + samePersonCost;
+  return { cost: restCost + sameHourCost + samePersonCost, restPeriod };
 };
 
 const populateOnDuty = ({ startTime, queue, shifts, minPeople, onDuty }) => {
   while (onDuty.length < minPeople) {
     const q = queue.map((person) => {
-      const cost = getCost({ startTime, person, shifts, minPeople, onDuty });
-      return { person, cost };
+      const { cost, restPeriod } = getCost({ startTime, person, shifts, minPeople, onDuty });
+      return { ...person, cost, restPeriod };
     });
-    queue = _.orderBy(q, ['cost'], ['desc']).map((p) => p.person);
+    queue = _.orderBy(q, ['cost'], ['desc']);
+    console.log(_.first(queue));
     onDuty.push(_.first(queue));
   }
   // const v = validShift(shifts, onDuty);
@@ -125,16 +135,43 @@ const generate = ({ stations, input, constraints, people }) => {
     allShifts.push({ ...shift, onDuty });
   });
 
-  console.table(allShifts);
+  console.log(allShifts[-1]);
+
+  console.table(
+    allShifts.map((s) => {
+      s.onDuty = s.onDuty.map((p) => p.name);
+      return s;
+    }),
+  );
   return [];
 };
 
+const printMetrics = (shifts) => {
+  const rest = {};
+
+  shifts.forEach((shift) => { });
+};
+
 const main = () => {
-  const people = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+  const people = [
+    { id: 1, name: '1' },
+    { id: 2, name: '2' },
+    { id: 3, name: '3' },
+    { id: 4, name: '4' },
+    { id: 5, name: '5' },
+    { id: 6, name: '6' },
+    { id: 7, name: '7' },
+    { id: 8, name: '8' },
+    { id: 9, name: '9' },
+    { id: 10, name: '10' },
+    { id: 11, name: '11' },
+    { id: 12, name: '12' },
+  ];
   // const people = _.shuffle(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']);
   const constraints = [];
   const shifts = generate({ stations, people, constraints });
-  print(shifts);
+
+  printMetrics(shifts);
 };
 
 main();
