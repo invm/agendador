@@ -1,11 +1,9 @@
 import dayjs from 'dayjs';
 import _ from 'lodash';
 
-const MIN_REST = 480; // in minutes
-const END_DAYS = 4;
-const TIME_FORMAT = 'hh:mm';
-const MAX_SHIFT_TIME = 7200;
-const CONSIDERED_LAST_SHIFTS = 24;
+const MIN_REST = 8; // in minutes
+const END_DAYS = 2;
+const TIME_FORMAT = 'DD/MM HH:mm';
 
 const WEIGHT_REST = 1;
 const WEIGHT_SAME_PERSON = -4;
@@ -16,24 +14,53 @@ const setHour = (date, h) => date.set('h', h).set('m', 0).set('s', 0).set('ms', 
 const stations = [
   {
     name: 'gate',
-    start: setHour(dayjs(), 8),
+    start: 6,
+    end: 6,
     input: [],
     minPeople: 2,
     shiftTime: 4,
     shiftInterval: 'h',
   },
   {
-    name: 'patrol',
-    start: setHour(dayjs(), 6),
+    name: 'viewpoint',
+    start: 6,
+    end: 18,
     input: [],
     minPeople: 1,
     shiftTime: 4,
     shiftInterval: 'h',
   },
+  {
+    name: 'patrol',
+    start: 18,
+    end: 6,
+    input: [],
+    minPeople: 2,
+    shiftTime: 4,
+    shiftInterval: 'h',
+  },
+  {
+    name: 'barricade-1',
+    start: 6,
+    end: 18,
+    input: [],
+    minPeople: 2,
+    shiftTime: 6,
+    shiftInterval: 'h',
+  },
+  {
+    name: 'barricade-2',
+    start: 6,
+    end: 18,
+    input: [],
+    minPeople: 2,
+    shiftTime: 6,
+    shiftInterval: 'h',
+  },
 ];
 
 const validShift = (shifts, onDuty) => {
-  const lastShifts = _.take(_.reverse(shifts), CONSIDERED_LAST_SHIFTS);
+  const lastShifts = _.reverse(shifts);
   if (!lastShifts.length) {
     return true;
   }
@@ -44,11 +71,9 @@ const validShift = (shifts, onDuty) => {
 
 const getCost = (args) => {
   const { person, shifts, startTime, minPeople, onDuty, shiftTime, shiftInterval } = args;
-  const lastShifts = _.filter(_.take(_.reverse(_.cloneDeep(shifts)), CONSIDERED_LAST_SHIFTS), (shift) => {
-    return !!_.find(shift.onDuty, { id: person.id });
-  });
+  const lastShifts = _.filter(_.reverse(_.cloneDeep(shifts)), (shift) => !!_.find(shift.onDuty, { id: person.id }));
   if (_.find(onDuty, { id: person.id })) return { cost: -Infinity, restPeriod: 0 };
-  if (!lastShifts.length) return { cost: Infinity, restPeriod: Infinity };
+  if (!lastShifts.length) return { cost: Infinity, restPeriod: 0 };
   const restPeriod = startTime.diff(lastShifts[0].startTime, shiftInterval) - shiftTime;
   const sameShiftHour = startTime.get('h') === lastShifts[0].startTime.get('h');
   const sameShiftPersons =
@@ -56,68 +81,118 @@ const getCost = (args) => {
       ? _.find(lastShifts, (s) => _.find(s.onDuty, { id: onDuty[0].id }))
       : false;
   // const totalRestTime = 0 // TODO v2: sum time between shifts
-
+  const totalShifts = lastShifts.length;
+  const totalRest = lastShifts.reduce((acc, curr, i, arr) => {
+    if (i === 0) {
+      return acc;
+    }
+    const prev = arr[i - 1];
+    return acc + curr.startTime.diff(prev.startTime, shiftInterval) - shiftTime;
+  }, 0);
+  if (restPeriod < MIN_REST) {
+    return { cost: -Infinity, restPeriod, totalShifts, totalRest };
+  }
   const restCost = restPeriod * WEIGHT_REST;
-  const sameHourCost = sameShiftHour ? WEIGHT_SAME_HOUR : 0;
-  const samePersonCost = sameShiftPersons ? WEIGHT_SAME_PERSON : 0;
+  // const sameHourCost = sameShiftHour ? WEIGHT_SAME_HOUR : 0;
+  // const samePersonCost = sameShiftPersons ? WEIGHT_SAME_PERSON : 0;
 
-  return { cost: restCost + sameHourCost + samePersonCost, restPeriod };
+  const sameHourCost = 0;
+  const samePersonCost = 0;
+
+  return { cost: restCost + sameHourCost + samePersonCost, restPeriod, totalShifts, totalRest };
 };
 
 const populateOnDuty = ({ startTime, queue, shifts, minPeople, onDuty, shiftTime, shiftInterval }) => {
   while (onDuty.length < minPeople) {
-    const q = queue.map((person) => {
-      const { cost, restPeriod } = getCost({ startTime, person, shifts, minPeople, onDuty, shiftTime, shiftInterval });
-      return { ...person, cost, restPeriod };
+    queue = queue.map((person) => {
+      const { cost, restPeriod, totalShifts } = getCost({
+        startTime,
+        person,
+        shifts,
+        minPeople,
+        onDuty,
+        shiftTime,
+        shiftInterval,
+      });
+      person.rest = person.rest ? person.rest + restPeriod : restPeriod;
+      return { ...person, cost, restPeriod, totalShifts };
     });
-    queue = _.orderBy(q, ['cost'], ['desc']);
+    queue = _.orderBy(queue, ['cost', 'totalShifts', 'totalRest'], ['desc', 'asc', 'desc']);
     onDuty.push(_.first(queue));
   }
   // const v = validShift(shifts, onDuty);
 };
 
-const generate = ({ stations, queue }) => {
-  let [startTime, scheduleEndTime] = stations.reduce(
-    (acc, curr) => {
-      let [min, max] = acc;
-      if (curr.start.isBefore(min)) {
-        min = curr.start;
+const shouldPopulateShift = ({ scheduleStartTime, start, end, shiftTime, step }) => {
+  const h = scheduleStartTime.get('h');
+  if (
+    (start === end && (h - step) % shiftTime === 0) ||
+    (start > end && (h >= start || h < end) && (h - step) % shiftTime === 0)
+  ) {
+    return true;
+  } else if (h >= start && h < end) {
+    if ((h - start) % shiftTime === 0) {
+      return true;
+    } else if ((h - start) % shiftTime === 0) {
+      return true;
+    }
+    return false;
+  }
+  return false;
+};
+
+const generate = ({ stations, queue, shifts = [] }) => {
+  let [scheduleStartTime, scheduleEndTime] = stations.reduce(
+    ([min, max], curr) => {
+      if (setHour(dayjs(), curr.start).isBefore(min)) {
+        min = setHour(dayjs(), curr.start);
       }
-      if (curr.start.isAfter(max)) {
-        max = curr.start;
+      if (setHour(dayjs(), curr.start).isAfter(max)) {
+        max = setHour(dayjs(), curr.start);
       }
       return [min, max];
     },
-    [stations[0].start, stations[0].start],
+    [setHour(dayjs(), stations[0].start), setHour(dayjs(), stations[0].start)],
   );
   // TODO: concat to already provided input and change start to be the start of input
   const endTime = setHour(dayjs(), scheduleEndTime.get('h')).add(END_DAYS, 'd');
-  let shifts = [];
-  const [step, interval] = stations.reduce(
-    (step, curr) => {
-      return curr.shiftTime < step[0] ? [curr.shiftTime, curr.shiftInterval] : step;
-    },
-    [MAX_SHIFT_TIME, 0],
-  );
+  // const [step, interval] = stations.reduce(
+  //   (step, curr) => {
+  //     return curr.shiftTime < step[0] ? [curr.shiftTime, curr.shiftInterval] : step;
+  //   },
+  //   [MAX_SHIFT_TIME, 0],
+  // );
+  const [step, interval] = [2, 'h'];
 
-  while (startTime.isBefore(endTime)) {
+  while (scheduleStartTime.isBefore(endTime)) {
     // TODO: add randomness element and keep track for next cycle to not fuck the same person again
-    stations.forEach(({ minPeople, name, shiftTime, shiftInterval }) => {
-      // it is initial because it will change in case the same peopl
-      // TODO v2: provide the whole station info to cost function
-      const start = startTime.format(TIME_FORMAT);
-      const shift = { onDuty: [], start, startTime, name, minPeople, shiftTime, shiftInterval };
-      shifts.push(shift);
-    });
+    for (let i = 0; i < stations.length; i++) {
+      const { minPeople, name, shiftTime, shiftInterval, start, end } = stations[i];
+      // it is initial because it will change in case the same people
+      if (shouldPopulateShift({ scheduleStartTime, start, end, shiftTime, step })) {
+        const shift = {
+          start: scheduleStartTime.format(TIME_FORMAT),
+          startTime: scheduleStartTime,
+          name,
+          minPeople,
+          shiftTime,
+          shiftInterval,
+        };
+        shifts.push(shift);
+      }
+    }
 
-    startTime = startTime.add(step, interval);
+    scheduleStartTime = scheduleStartTime.add(step, interval);
   }
+
   const allShifts = [];
-  shifts.forEach(({ minPeople, shiftTime, shiftInterval, ...shift }) => {
+
+  for (let i = 0; i < shifts.length; i++) {
+    const { minPeople, shiftTime, shiftInterval, startTime, ...shift } = shifts[i];
     const onDuty = [];
     populateOnDuty({ startTime, queue, shifts: allShifts, minPeople, onDuty, shiftTime, shiftInterval });
-    allShifts.push({ ...shift, onDuty, shiftTime, shiftInterval });
-  });
+    allShifts.push({ ...shift, onDuty, shiftTime, shiftInterval, startTime });
+  }
 
   return allShifts;
 };
@@ -125,7 +200,8 @@ const generate = ({ stations, queue }) => {
 const printMetrics = (shifts) => {
   let metrics = {},
     minRest = Infinity,
-    maxRest = 0;
+    maxRest = 0,
+    totalShifts = [];
 
   shifts.forEach((shift) => {
     shift.onDuty.forEach((p) => {
@@ -136,6 +212,7 @@ const printMetrics = (shifts) => {
       }
       metrics[p.id]['shifts'].push({
         startTime: shift.startTime,
+        shiftTime: shift.shiftTime,
       });
     });
   });
@@ -145,33 +222,38 @@ const printMetrics = (shifts) => {
         return acc;
       }
       const prev = arr[i - 1];
-      const restPeriod = curr.startTime.diff(prev.startTime, 'h');
+      const restPeriod = curr.startTime.diff(prev.startTime, 'h') - prev.shiftTime;
       if (restPeriod < minRest) {
         minRest = restPeriod;
       }
       if (restPeriod > maxRest) {
         maxRest = restPeriod;
       }
-      acc.push(restPeriod);
+      acc.push(`${prev.shiftTime}-${restPeriod}`);
       if (i === arr.length - 1) {
         const total = arr.reduce((acc, curr, i, arr) => {
           if (i === 0) {
             return acc;
           }
           const prev = arr[i - 1];
-          return acc + curr.startTime.diff(prev.startTime, 'h');
+          return acc + curr.startTime.diff(prev.startTime, 'h') - prev.shiftTime;
         }, 0);
         const average = total / (arr.length - 1);
+        acc['id'] = id;
         acc['total'] = total;
+        acc['shifts'] = arr.length;
         acc['average'] = +average.toFixed(1);
+        totalShifts.push(arr.length);
       }
       return acc;
     }, []);
     delete metrics[id]['shifts'];
   });
-  console.log(metrics);
+  const rests = Object.keys(metrics).map((id) => metrics[id].rest);
+  console.table(rests);
   console.log('minRest', minRest);
   console.log('maxRest', maxRest);
+  console.log('totalShifts:', totalShifts);
 };
 
 const printShifts = (shifts) => {
@@ -187,21 +269,30 @@ const printShifts = (shifts) => {
 };
 
 const main = () => {
-  const queue = [
-    { id: 1, name: '1' },
-    { id: 2, name: '2' },
-    { id: 3, name: '3' },
-    { id: 4, name: '4' },
-    { id: 5, name: '5' },
-    { id: 6, name: '6' },
-    { id: 7, name: '7' },
-    { id: 8, name: '8' },
-    { id: 9, name: '9' },
-    { id: 10, name: '10' },
-    { id: 11, name: '11' },
-    { id: 12, name: '12' },
-  ];
-  // const people = _.shuffle(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']);
+  const queue =
+    // _.shuffle(
+    [
+      { id: 1, name: '1' },
+      { id: 2, name: '2' },
+      { id: 3, name: '3' },
+      { id: 4, name: '4' },
+      { id: 5, name: '5' },
+      { id: 6, name: '6' },
+      { id: 7, name: '7' },
+      { id: 8, name: '8' },
+      { id: 9, name: '9' },
+      { id: 10, name: '10' },
+      { id: 11, name: '11' },
+      { id: 12, name: '12' },
+      { id: 13, name: '13' },
+      { id: 14, name: '14' },
+      { id: 15, name: '15' },
+      { id: 16, name: '16' },
+      { id: 17, name: '17' },
+      { id: 18, name: '18' },
+      // { id: 19, name: '19' },
+    ];
+  // );
   // TODO: input
   const shifts = generate({ stations, queue });
   printShifts(shifts);
