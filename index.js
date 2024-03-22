@@ -3,7 +3,7 @@ import _ from "lodash";
 import { writeFile } from "fs/promises";
 
 const MIN_REST = 4; // in minutes
-const END_DAYS = 3;
+const END_DAYS = 7;
 const TIME_FORMAT = "DD/MM HH:mm";
 
 const WEIGHT_REST = 1;
@@ -62,16 +62,6 @@ const stations = [
     shiftInterval: "h",
   },
 ];
-
-const validShift = (shifts, onDuty) => {
-  const lastShifts = _.reverse(shifts);
-  if (!lastShifts.length) {
-    return true;
-  }
-  return !!lastShifts.find((curr) => {
-    return _.intersection(curr, onDuty).length === 2;
-  });
-};
 
 const getCost = (args) => {
   const {
@@ -337,11 +327,11 @@ const generateCsv = (shifts, stations) => {
   Object.keys(grouped).forEach((time) => {
     csv += `${time},`;
     stations.forEach((station) => {
-      for (let i = 1; i <= station.minPeople; i++) {
+      for (let i = 0; i <= station.minPeople; i++) {
         const person = grouped[time].find(
-          (s) => s.name === station.name && s.onDuty.length >= i,
+          (s) => s.name === station.name && s.onDuty.length > i,
         );
-        csv += `${person?.onDuty[i - 1]?.name ?? ""},`;
+        csv += `${person?.onDuty[i]?.name.padStart(2) ?? "  "},`;
       }
     });
     csv += "\n";
@@ -350,7 +340,7 @@ const generateCsv = (shifts, stations) => {
 };
 
 const main = () => {
-  const THOARTS = 19;
+  const THOARTS = 17;
   const queue =
     // _.shuffle(
     Array.from({ length: THOARTS }, (_, i) => ({
@@ -362,7 +352,7 @@ const main = () => {
   const shifts = generate({ stations, queue });
   printShifts(shifts);
   printMetrics(shifts);
-  // console.log(generateCsv(shifts, stations));
+  console.log(generateCsv(shifts, stations));
   // writeFile('1.csv', generateCsv(shifts, stations));
 };
 
