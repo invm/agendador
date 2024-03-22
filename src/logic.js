@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
 import _ from "lodash";
-import { writeFile } from "fs/promises";
 
 const MIN_REST = 4; // in minutes
 const END_DAYS = 7;
@@ -317,29 +316,32 @@ const printShifts = (shifts) => {
 
 const generateCsv = (shifts, stations) => {
   let csv = "time,";
+  const headers = [];
   stations.forEach((station) => {
     for (let i = 1; i <= station.minPeople; i++) {
-      csv += `${station.name}-${i},`;
+      headers.push(`${station.name}-${i}`);
     }
   });
-  csv += "\n";
+  csv += headers.join(",") + "\n";
   const grouped = _.groupBy(shifts, (s) => s.startTime.format(TIME_FORMAT));
   Object.keys(grouped).forEach((time) => {
     csv += `${time},`;
+    const shift = [];
     stations.forEach((station) => {
-      for (let i = 0; i <= station.minPeople; i++) {
+      for (let i = 1; i <= station.minPeople; i++) {
         const person = grouped[time].find(
-          (s) => s.name === station.name && s.onDuty.length > i,
+          (s) => s.name === station.name && s.onDuty.length >= i,
         );
-        csv += `${person?.onDuty[i]?.name.padStart(2) ?? "  "},`;
+        // csv += `${person?.onDuty[i - 1]?.name ?? ""},`;
+        shift.push(person?.onDuty[i - 1]?.name ?? "");
       }
     });
-    csv += "\n";
+    csv += shift.join(",") + "\n";
   });
   return csv;
 };
 
-const main = () => {
+export const getShifts = () => {
   const THOARTS = 17;
   const queue =
     // _.shuffle(
@@ -350,10 +352,7 @@ const main = () => {
   // );
   // TODO: input
   const shifts = generate({ stations, queue });
-  printShifts(shifts);
-  printMetrics(shifts);
-  console.log(generateCsv(shifts, stations));
-  // writeFile('1.csv', generateCsv(shifts, stations));
+  // printShifts(shifts);
+  // printMetrics(shifts);
+  return generateCsv(shifts, stations);
 };
-
-main();
