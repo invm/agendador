@@ -1,0 +1,14 @@
+{
+  "translation": {
+    "title": "Agendador",
+    "description": "שיבוץ משמרות",
+    "language": "שפה",
+    "stations": "תחנות",
+    "people": "אנשים",
+    "add_station": "Add station",
+    "start_time": "Start time",
+    "end_time": "End time",
+    "required_people": "Require people",
+    "shift_time": "Shift time"
+  }
+}

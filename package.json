@@ -23,6 +23,8 @@
     "ag-grid-community": "~31.1.1",
     "ag-grid-solid": "~31.1.1",
     "dayjs": "^1.11.10",
+    "i18next": "^23.10.1",
+    "i18next-browser-languagedetector": "^7.2.0",
     "lodash": "^4.17.21",
     "solid-js": "^1.8.11"
   }

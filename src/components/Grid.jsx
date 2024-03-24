@@ -1,6 +1,7 @@
 import AgGridSolid from "ag-grid-solid";
 import { getShifts } from "../logic";
-import { csvToJson } from "../utils";
+import { csvToJson } from "../utils/utils";
+import Navbar from "./Navbar";
 
 const Grid = (props) => {
   const { headers, rows } = csvToJson(getShifts());
@@ -9,13 +10,8 @@ const Grid = (props) => {
   let gridRef;
 
   return (
-    <div class="">
-      <div class="py-2">
-        <h3>Stations config</h3>
-      </div>
-      <div class="py-2">
-        <h3>List of people</h3>
-      </div>
+    <>
+      <Navbar changeLang={props.changeLang} />
       <div class="ag-theme-alpine" style={{ height: "700px" }}>
         <AgGridSolid
           columnDefs={columnDefs}
@@ -30,7 +26,7 @@ const Grid = (props) => {
           }}
         />
       </div>
-    </div>
+    </>
   );
 };
 
