@@ -6,8 +6,8 @@ const END_DAYS = 7;
 const TIME_FORMAT = "DD/MM HH:mm";
 
 const WEIGHT_REST = 1;
-const WEIGHT_SAME_PERSON = -4;
-const WEIGHT_SAME_HOUR = -4;
+// const WEIGHT_SAME_PERSON = -4;
+// const WEIGHT_SAME_HOUR = -4;
 const INTERVAL = "h";
 const INTERVAL_TIME = 1;
 
@@ -81,11 +81,11 @@ const getCost = (args) => {
   if (!lastShifts.length) return { cost: Infinity, restPeriod: 0 };
   const restPeriod =
     startTime.diff(lastShifts[0].startTime, shiftInterval) - shiftTime;
-  const sameShiftHour = startTime.get("h") === lastShifts[0].startTime.get("h");
-  const sameShiftPersons =
-    onDuty.length < minPeople && onDuty.length > 0
-      ? _.find(lastShifts, (s) => _.find(s.onDuty, { id: onDuty[0].id }))
-      : false;
+  // const sameShiftHour = startTime.get("h") === lastShifts[0].startTime.get("h");
+  // const sameShiftPersons =
+  onDuty.length < minPeople && onDuty.length > 0
+    ? _.find(lastShifts, (s) => _.find(s.onDuty, { id: onDuty[0].id }))
+    : false;
   // const totalRestTime = 0 // TODO v2: sum time between shifts
   const totalShifts = lastShifts.length;
   const totalRest = lastShifts.reduce((acc, curr, i, arr) => {
@@ -151,7 +151,7 @@ const shouldPopulateShift = ({
   start,
   end,
   shiftTime,
-  step,
+  // step,
 }) => {
   const h = scheduleStartTime.get("h");
   if (start === end && (h - start) % shiftTime === 0) {
@@ -352,7 +352,7 @@ export const getShifts = () => {
   // );
   // TODO: input
   const shifts = generate({ stations, queue });
-  // printShifts(shifts);
-  // printMetrics(shifts);
+  printShifts(shifts);
+  printMetrics(shifts);
   return generateCsv(shifts, stations);
 };

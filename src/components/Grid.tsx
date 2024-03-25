@@ -3,11 +3,16 @@ import { getShifts } from "../logic";
 import { csvToJson } from "../utils/utils";
 import Navbar from "./Navbar";
 
-const Grid = (props) => {
+type GridProps = {
+  changeLang: () => void;
+  dir: string;
+};
+
+const Grid = (props: GridProps) => {
   const { headers, rows } = csvToJson(getShifts());
   // const [stations, setStations] = createSignal([]);
 
-  const columnDefs = headers.map((field) => ({ field }));
+  const columnDefs = headers.map((field: string) => ({ field }));
   let gridRef;
 
   return (
@@ -32,3 +37,4 @@ const Grid = (props) => {
 };
 
 export default Grid;
+

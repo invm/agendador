@@ -1,7 +1,6 @@
 import { t } from "../utils/i18n";
 
 const StationsModal = () => {
-  const stations = [];
   return (
     <dialog id="stations_modal" class="modal">
       <div class="modal-box">
