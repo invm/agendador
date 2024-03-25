@@ -5,6 +5,7 @@ import Navbar from "./Navbar";
 
 const Grid = (props) => {
   const { headers, rows } = csvToJson(getShifts());
+  // const [stations, setStations] = createSignal([]);
 
   const columnDefs = headers.map((field) => ({ field }));
   let gridRef;

@@ -1,12 +1,15 @@
+import { t } from "../utils/i18n";
+
 const StationsModal = () => {
+  const stations = [];
   return (
     <dialog id="stations_modal" class="modal">
       <div class="modal-box">
-        <h3 class="font-bold text-lg">Hello!</h3>
-        <p class="py-4">{t('add_station')}</p>
+        <h3 class="font-bold text-lg">{t('stations')}</h3>
+        <p class="py-4">{t("add_station")}</p>
         <div>
           <div class="collapse mb-2 collapse-arrow bg-base-200">
-            <input type="radio" name="my-accordion-2" defaultChecked />
+            <input type="radio" name="my-accordion-2"/>
             <div class="collapse-title text-xl font-medium">
               Click to open this one and close others
             </div>
