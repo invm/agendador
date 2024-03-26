@@ -5,7 +5,7 @@ import StationsModal from "./StationsModal";
 const Navbar = (props) => {
   return (
     <>
-      <StationsModal />
+      <StationsModal stations={props.stations} addStation={props.addStation} onChangeStation={props.onChangeStation } />
       <PeopleModal />
       <div class="navbar bg-base-300 rounded-box mb-4">
         <div class="flex-1 px-2 ">

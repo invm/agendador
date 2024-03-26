@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import _ from "lodash";
 
 const MIN_REST = 4; // in minutes
@@ -11,7 +11,7 @@ const WEIGHT_REST = 1;
 const INTERVAL = "h";
 const INTERVAL_TIME = 1;
 
-const setHour = (date, h) =>
+const setHour = (date: Dayjs, h: number) =>
   date.set("h", h).set("m", 0).set("s", 0).set("ms", 0);
 
 const stations = [
@@ -19,7 +19,6 @@ const stations = [
     name: "gate",
     start: 6,
     end: 6,
-    input: [],
     minPeople: 2,
     shiftTime: 6,
     shiftInterval: "h",
@@ -28,7 +27,6 @@ const stations = [
     name: "viewpoint",
     start: 6,
     end: 18,
-    input: [],
     minPeople: 1,
     shiftTime: 4,
     shiftInterval: "h",
@@ -37,7 +35,6 @@ const stations = [
     name: "patrol",
     start: 18,
     end: 6,
-    input: [],
     minPeople: 2,
     shiftTime: 6,
     shiftInterval: "h",
@@ -46,7 +43,6 @@ const stations = [
     name: "barricade-a",
     start: 6,
     end: 18,
-    input: [],
     minPeople: 2,
     shiftTime: 6,
     shiftInterval: "h",
@@ -55,19 +51,28 @@ const stations = [
     name: "barricade-b",
     start: 6,
     end: 18,
-    input: [],
     minPeople: 2,
     shiftTime: 6,
     shiftInterval: "h",
   },
 ];
 
-const getCost = (args) => {
+type getCostArgs = {
+  person: any;
+  shifts: any;
+  startTime: any;
+  minPeople: number;
+  onDuty: any;
+  shiftTime: number;
+  shiftInterval: string;
+};
+
+const getCost = (args: getCostArgs) => {
   const {
     person,
     shifts,
     startTime,
-    minPeople,
+    // minPeople,
     onDuty,
     shiftTime,
     shiftInterval,
@@ -83,9 +88,9 @@ const getCost = (args) => {
     startTime.diff(lastShifts[0].startTime, shiftInterval) - shiftTime;
   // const sameShiftHour = startTime.get("h") === lastShifts[0].startTime.get("h");
   // const sameShiftPersons =
-  onDuty.length < minPeople && onDuty.length > 0
-    ? _.find(lastShifts, (s) => _.find(s.onDuty, { id: onDuty[0].id }))
-    : false;
+  //   onDuty.length < minPeople && onDuty.length > 0
+  //     ? _.find(lastShifts, (s) => _.find(s.onDuty, { id: onDuty[0].id }))
+  //     : false;
   // const totalRestTime = 0 // TODO v2: sum time between shifts
   const totalShifts = lastShifts.length;
   const totalRest = lastShifts.reduce((acc, curr, i, arr) => {
