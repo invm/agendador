@@ -5,10 +5,15 @@
     "language": "שפה",
     "stations": "תחנות",
     "people": "אנשים",
-    "add_station": "Add station",
-    "start_time": "Start time",
-    "end_time": "End time",
-    "required_people": "Require people",
-    "shift_time": "Shift time"
+    "add_station": "הוסף תחנה",
+    "add_person": "הוסף אדם",
+    "name": "שם",
+    "station_name": "שם תחנה",
+    "start_time": "שעת התחלה",
+    "end_time": "שעת סיום",
+    "required_people": "כמות אנשים דרושה",
+    "shift_time": "זמן משמרת בדקות",
+    "save": "שמור",
+    "generate": "הרץ"
   }
 }

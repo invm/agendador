@@ -6,9 +6,14 @@
     "stations": "Stations",
     "people": "People",
     "add_station": "Add station",
+    "add_person": "Add person",
+    "name": "Name",
+    "station_name": "Station name",
     "start_time": "Start time",
     "end_time": "End time",
     "required_people": "Require people",
-    "shift_time": "Shift time"
+    "shift_time": "Shift time in minutes",
+    "save": "Save",
+    "generate": "Generate"
   }
 }
