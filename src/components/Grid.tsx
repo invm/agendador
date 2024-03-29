@@ -82,6 +82,22 @@ const Grid = (props: GridProps) => {
     setPeople(index, key, value);
   };
 
+  const insertDemoData = () => {
+    setPeople([
+      ...Array.from({ length: 10 }, (_, i) => ({ name: `Person ${i}`, id: i })),
+    ]);
+    setStations([
+      ...Array.from({ length: 2 }, (_, i) => ({
+        name: `Station ${i}`,
+        start: "06:00",
+        end: "06:00",
+        minPeople: 2,
+        shiftTime: 360,
+        shiftInterval: "m",
+      })),
+    ]);
+  };
+
   const columnDefs = headers.map((field: string) => ({ field }));
   let gridRef;
 
@@ -108,6 +124,7 @@ const Grid = (props: GridProps) => {
           addPerson,
           removePerson,
           onChangePerson,
+          insertDemoData,
         }}
       />
       <div class="ag-theme-alpine" style={{ height: "700px" }}>

@@ -23,6 +23,7 @@ type NavbarProps = {
     key: PersonKeys,
     value: string | number,
   ) => void;
+  insertDemoData: () => void;
 };
 
 const Navbar = (props: NavbarProps) => {
@@ -53,13 +54,19 @@ const Navbar = (props: NavbarProps) => {
           <div class="flex items-stretch">
             <div class="dropdown dropdown-end">
               <a
+                onClick={() => props.insertDemoData()}
+                class="btn btn-ghost rounded-btn"
+              >
+                {t("demo")}
+              </a>
+              <a
                 onClick={() =>
                   //@ts-ignore
                   document.getElementById("stations_modal").showModal()
                 }
                 class="btn btn-ghost rounded-btn"
               >
-                {t("stations")}
+                {t("stations")} {props.stations.length || ''}
               </a>
               <a
                 onClick={() =>
@@ -68,7 +75,7 @@ const Navbar = (props: NavbarProps) => {
                 }
                 class="btn btn-ghost rounded-btn"
               >
-                {t("people")}
+                {t("people")} {props.people.length || ''}
               </a>
               <div tabindex="0" role="button" class="btn btn-ghost rounded-btn">
                 {t("language")}
