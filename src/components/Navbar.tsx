@@ -13,7 +13,7 @@ type NavbarProps = {
     key: StationKeys,
     value: string | number,
   ) => void;
-  changeLang: (lang: string) => void;
+  changeLang: (lng: "he" | "en") => void;
   valid: Accessor<boolean>;
   people: Person[];
   addPerson: () => void;
@@ -41,12 +41,12 @@ const Navbar = (props: NavbarProps) => {
         removePerson={props.removePerson}
         onChangePerson={props.onChangePerson}
       />
-      <div class="navbar bg-base-300 rounded-box mb-4">
+      <div class="navbar bg-base-300">
         <div class="flex-1 px-2">
-          <a class="text-lg font-bold">{t("title")}</a>
+          <a class="text-lg font-bold text-info">{t("title")}</a>
           <Show when={props.valid()}>
             <div class="px-10">
-              <a class="btn btn-sm btn-primary">{t("generate")}</a>
+              <a class="btn btn-sm btn-info">{t("generate")}</a>
             </div>
           </Show>
         </div>
@@ -55,7 +55,7 @@ const Navbar = (props: NavbarProps) => {
             <div class="dropdown dropdown-end">
               <a
                 onClick={() => props.insertDemoData()}
-                class="btn btn-ghost rounded-btn"
+                class="btn btn-ghost rounded-btn btn-sm hover:text-info"
               >
                 {t("demo")}
               </a>
@@ -64,20 +64,24 @@ const Navbar = (props: NavbarProps) => {
                   //@ts-ignore
                   document.getElementById("stations_modal").showModal()
                 }
-                class="btn btn-ghost rounded-btn"
+                class="btn btn-ghost rounded-btn btn-sm hover:text-info"
               >
-                {t("stations")} {props.stations.length || ''}
+                {t("stations")} {props.stations.length || ""}
               </a>
               <a
                 onClick={() =>
                   //@ts-ignore
                   document.getElementById("people_modal").showModal()
                 }
-                class="btn btn-ghost rounded-btn"
+                class="btn btn-ghost rounded-btn btn-sm hover:text-info"
               >
-                {t("people")} {props.people.length || ''}
+                {t("people")} {props.people.length || ""}
               </a>
-              <div tabindex="0" role="button" class="btn btn-ghost rounded-btn">
+              <div
+                tabindex="0"
+                role="button"
+                class="btn btn-ghost rounded-btn btn-sm hover:text-info"
+              >
                 {t("language")}
               </div>
               <ul

@@ -7,7 +7,7 @@ import i18n, { changeLanguage } from "i18next";
 export default function App() {
   const [dir, setDir] = createSignal("ltr");
 
-  const changeLang = (lng) => {
+  const changeLang = (lng: 'he' | 'en') => {
     if (lng !== "he") {
       changeLanguage(lng);
       setDir("ltr");
@@ -34,7 +34,7 @@ export default function App() {
   });
 
   return (
-    <div class="w-full h-full p-5">
+    <div class="w-full h-full">
       <Show when={dir()} keyed>
         {(dir) => <Grid {...{ dir, changeLang }} />}
       </Show>

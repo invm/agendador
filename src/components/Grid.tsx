@@ -4,10 +4,11 @@ import AgGridSolid from "ag-grid-solid";
 import { getShifts } from "../logic";
 import { csvToJson } from "../utils/utils";
 import Navbar from "./Navbar";
-import { createEffect, createSignal } from "solid-js";
+import { Show, createEffect, createSignal } from "solid-js";
+import { Actions } from "./Actions";
 
 type GridProps = {
-  changeLang: () => void;
+  changeLang: (lng: "he" | "en") => void;
   dir: string;
 };
 
@@ -110,6 +111,18 @@ const Grid = (props: GridProps) => {
     suppressMovable: true,
   };
 
+  const getDataAsText = (type: "csv" | "spreadsheet") => {
+    const dl = type === "csv" ? "," : "\t";
+    return (
+      headers.join(dl) +
+      "\n" +
+      rows
+        .map((r: Record<string, string>) => Object.values(r).join(dl))
+        .join("\n")
+    );
+    //
+  };
+
   return (
     <>
       <Navbar
@@ -127,17 +140,22 @@ const Grid = (props: GridProps) => {
           insertDemoData,
         }}
       />
-      <div class="ag-theme-alpine" style={{ height: "700px" }}>
-        <AgGridSolid
-          columnDefs={columnDefs}
-          rowData={rows}
-          enableRtl={props.dir === "rtl"}
-          ref={gridRef}
-          enableCellTextSelection={true}
-          rowSelection="multiple"
-          defaultColDef={defaultColDef}
-        />
-      </div>
+      <main class="p-5">
+        <div class="ag-theme-alpine" style={{ height: "700px" }}>
+          <AgGridSolid
+            columnDefs={columnDefs}
+            rowData={rows}
+            enableRtl={props.dir === "rtl"}
+            ref={gridRef}
+            enableCellTextSelection={true}
+            rowSelection="multiple"
+            defaultColDef={defaultColDef}
+          />
+        </div>
+        <Show when={rows.length}>
+          <Actions {...{ getDataAsText }} />
+        </Show>
+      </main>
     </>
   );
 };

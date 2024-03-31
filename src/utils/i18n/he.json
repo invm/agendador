@@ -15,6 +15,9 @@
     "shift_time": "זמן משמרת בדקות",
     "save": "שמור",
     "generate": "הרץ",
-    "demo": "הדגמה"
+    "demo": "הדגמה",
+    "copy_as_spreadsheet": "Copy as spreadsheet",
+    "copy_as_csv": "Copy as CSV",
+    "export": "Export"
   }
 }
