@@ -18,6 +18,7 @@
     "demo": "הדגמה",
     "copy_as_spreadsheet": "Copy as spreadsheet",
     "copy_as_csv": "Copy as CSV",
-    "export": "Export"
+    "export": "Export",
+    "config": "Config"
   }
 }

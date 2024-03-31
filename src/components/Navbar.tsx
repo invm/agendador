@@ -1,8 +1,7 @@
 import { Accessor, Show } from "solid-js";
 import { t } from "../utils/i18n";
 import { Person, PersonKeys, Station, StationKeys } from "./Grid";
-import PeopleModal from "./PeopleModal";
-import StationsModal from "./StationsModal";
+import ConfigModal from "./ConfigModal";
 
 type NavbarProps = {
   stations: Station[];
@@ -29,17 +28,16 @@ type NavbarProps = {
 const Navbar = (props: NavbarProps) => {
   return (
     <>
-      <StationsModal
+      <ConfigModal
         stations={props.stations}
         addStation={props.addStation}
         removeStation={props.removeStation}
         onChangeStation={props.onChangeStation}
-      />
-      <PeopleModal
         people={props.people}
         addPerson={props.addPerson}
         removePerson={props.removePerson}
         onChangePerson={props.onChangePerson}
+        insertDemoData={props.insertDemoData}
       />
       <div class="navbar bg-base-300">
         <div class="flex-1 px-2">
@@ -62,20 +60,11 @@ const Navbar = (props: NavbarProps) => {
               <a
                 onClick={() =>
                   //@ts-ignore
-                  document.getElementById("stations_modal").showModal()
+                  document.getElementById("config_modal").showModal()
                 }
                 class="btn btn-ghost rounded-btn btn-sm hover:text-info"
               >
-                {t("stations")} {props.stations.length || ""}
-              </a>
-              <a
-                onClick={() =>
-                  //@ts-ignore
-                  document.getElementById("people_modal").showModal()
-                }
-                class="btn btn-ghost rounded-btn btn-sm hover:text-info"
-              >
-                {t("people")} {props.people.length || ""}
+                {t("config")}
               </a>
               <div
                 tabindex="0"
