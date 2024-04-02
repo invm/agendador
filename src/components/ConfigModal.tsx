@@ -1,9 +1,9 @@
-import { For } from "solid-js";
+import { Accessor, For, Setter } from "solid-js";
 import { t } from "../utils/i18n";
 import { TimePicker } from "./TimePicker";
 import { Person, PersonKeys, Station, StationKeys } from "./Grid";
 
-type ConfigModalProps = {
+export type ConfigModalProps = {
   stations: Station[];
   addStation: () => void;
   removeStation: (i: number) => void;
@@ -21,12 +21,32 @@ type ConfigModalProps = {
     value: string | number,
   ) => void;
   insertDemoData: () => void;
+  days: Accessor<number>;
+  setDays: Setter<number>;
+  generate: () => void;
 };
 
 const ConfigModal = (props: ConfigModalProps) => {
   return (
     <dialog id="config_modal" class="modal">
       <div class="modal-box flex flex-col w-11/12 max-w-5xl max-h-full h-[500px]">
+        <div>
+          <label class="form-control w-full max-w-xs">
+            <div class="label">
+              <span class="label-text">{t("days_to_generate")}</span>
+            </div>
+            <input
+              type="number"
+              value={props.days()}
+              min={1}
+              max={10}
+              onChange={(e) => {
+                props.setDays(+e.target.value);
+              }}
+              class="input input-bordered input-sm w-full max-w-xs"
+            />
+          </label>
+        </div>
         <div class="flex flex-1 gap-5">
           <div class="flex-1">
             <h3 class="font-py-4 bold text-lg">{t("stations")}</h3>
@@ -224,6 +244,7 @@ const ConfigModal = (props: ConfigModalProps) => {
           </button>
           <button
             onClick={() => {
+              props.generate();
               //@ts-ignore
               document.getElementById("config_modal").close();
             }}

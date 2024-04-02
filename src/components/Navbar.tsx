@@ -1,44 +1,16 @@
 import { Accessor, Show } from "solid-js";
 import { t } from "../utils/i18n";
-import { Person, PersonKeys, Station, StationKeys } from "./Grid";
-import ConfigModal from "./ConfigModal";
+import ConfigModal, { ConfigModalProps } from "./ConfigModal";
 
-type NavbarProps = {
-  stations: Station[];
-  addStation: () => void;
-  removeStation: (i: number) => void;
-  onChangeStation: (
-    index: number,
-    key: StationKeys,
-    value: string | number,
-  ) => void;
+type NavbarProps = ConfigModalProps & {
   changeLang: (lng: "he" | "en") => void;
   valid: Accessor<boolean>;
-  people: Person[];
-  addPerson: () => void;
-  removePerson: (i: number) => void;
-  onChangePerson: (
-    index: number,
-    key: PersonKeys,
-    value: string | number,
-  ) => void;
-  insertDemoData: () => void;
 };
 
 const Navbar = (props: NavbarProps) => {
   return (
     <>
-      <ConfigModal
-        stations={props.stations}
-        addStation={props.addStation}
-        removeStation={props.removeStation}
-        onChangeStation={props.onChangeStation}
-        people={props.people}
-        addPerson={props.addPerson}
-        removePerson={props.removePerson}
-        onChangePerson={props.onChangePerson}
-        insertDemoData={props.insertDemoData}
-      />
+      <ConfigModal {...props} />
       <div class="navbar bg-base-300">
         <div class="flex-1 px-2">
           <a class="text-lg font-bold text-info">{t("title")}</a>

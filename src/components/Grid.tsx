@@ -24,16 +24,19 @@ export type Station = {
 export type Person = {
   name: string;
   id: number;
+  rest?: number;
 };
 
 export type PersonKeys = keyof Person;
 export type StationKeys = keyof Station;
 
 const Grid = (props: GridProps) => {
-  const { headers, rows } = csvToJson(getShifts());
   const [stations, setStations] = createStore<Station[]>([]);
   const [people, setPeople] = createStore<Person[]>([]);
   const [valid, setValid] = createSignal(false);
+  const [days, setDays] = createSignal(1);
+  const [headers, setHeaders] = createSignal<string[]>([]);
+  const [rows, setRows] = createStore<Record<string, string>[]>([]);
 
   createEffect(() => {
     setValid(stations.length > 0 && people.length > 0);
@@ -99,7 +102,6 @@ const Grid = (props: GridProps) => {
     ]);
   };
 
-  const columnDefs = headers.map((field: string) => ({ field }));
   let gridRef;
 
   const defaultColDef = {
@@ -114,13 +116,28 @@ const Grid = (props: GridProps) => {
   const getDataAsText = (type: "csv" | "spreadsheet") => {
     const dl = type === "csv" ? "," : "\t";
     return (
-      headers.join(dl) +
+      headers().join(dl) +
       "\n" +
       rows
         .map((r: Record<string, string>) => Object.values(r).join(dl))
         .join("\n")
     );
     //
+  };
+
+  const generate = () => {
+    const { headers: _headers, rows: _rows } = csvToJson(
+      getShifts({ stations, people, days: days() }),
+    );
+    setHeaders(_headers);
+    setRows(_rows);
+  };
+
+  const getColumnDef = () => {
+    return [];
+    return headers().length
+      ? headers().map((field: string) => ({ field }))
+      : [];
   };
 
   return (
@@ -138,12 +155,15 @@ const Grid = (props: GridProps) => {
           removePerson,
           onChangePerson,
           insertDemoData,
+          days,
+          setDays,
+          generate,
         }}
       />
       <main class="p-5">
         <div class="ag-theme-alpine" style={{ height: "700px" }}>
           <AgGridSolid
-            columnDefs={columnDefs}
+            columnDefs={[]}
             rowData={rows}
             enableRtl={props.dir === "rtl"}
             ref={gridRef}

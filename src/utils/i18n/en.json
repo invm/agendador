@@ -19,6 +19,7 @@
     "copy_as_spreadsheet": "Copy as spreadsheet",
     "copy_as_csv": "Copy as CSV",
     "export": "Export spreadsheet",
-    "config": "Config"
+    "config": "Config",
+    "days_to_generate": "Days to generate"
   }
 }
