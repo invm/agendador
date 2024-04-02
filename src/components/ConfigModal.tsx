@@ -30,7 +30,7 @@ const ConfigModal = (props: ConfigModalProps) => {
   return (
     <dialog id="config_modal" class="modal">
       <div class="modal-box flex flex-col w-11/12 max-w-5xl max-h-full h-[500px]">
-        <div>
+        <div class="pb-4">
           <label class="form-control w-full max-w-xs">
             <div class="label">
               <span class="label-text">{t("days_to_generate")}</span>
@@ -62,7 +62,7 @@ const ConfigModal = (props: ConfigModalProps) => {
               <For each={props.stations}>
                 {(station, i) => (
                   <div class="flex items-center">
-                    <div class="collapse mb-2 collapse-arrow bg-base-200">
+                    <div class="collapse mb-2 collapse-arrow bg-base-200 collapse-sm collapse-sm ">
                       <input type="radio" name="my-accordion-2" />
                       <div class="collapse-title text-xl font-medium">
                         <span>{station.name}</span>
@@ -195,17 +195,17 @@ const ConfigModal = (props: ConfigModalProps) => {
               <For each={props.people}>
                 {(person, i) => (
                   <div class="mb-2">
-                    <label class="input input-bordered input-lg flex items-center gap-2">
-                      #{i() + 1} {t("name")}
+                    <label class="input input-bordered input-sm flex items-center gap-2">
+                      #{i() + 1}:
                       <input
                         type="text"
                         value={person.name}
                         onChange={(e) => {
                           props.onChangePerson(i(), "name", e.target.value);
                         }}
-                        class="grow"
+                        class="grow px-2"
                       />
-                      <div class="pl-2">
+                      <div class="pl-2 flex items-center">
                         <button
                           onClick={() => props.removePerson(i())}
                           class="btn btn-xs btn-ghost btn-square"
@@ -244,7 +244,6 @@ const ConfigModal = (props: ConfigModalProps) => {
           </button>
           <button
             onClick={() => {
-              props.generate();
               //@ts-ignore
               document.getElementById("config_modal").close();
             }}

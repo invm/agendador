@@ -7,7 +7,6 @@ type TimePickerProps = {
 };
 
 const getTime = (time: string) => {
-  console.log(time);
   const [hours, minutes] = time.split(":");
   return { hours: parseInt(hours), minutes: parseInt(minutes) };
 };
@@ -17,7 +16,11 @@ export const TimePicker = (props: TimePickerProps) => {
   const [minutes, setMinutes] = createSignal(getTime(props.value).minutes);
 
   createEffect(() => {
-    props.onChange(`${hours()}:${minutes()}`);
+    const h = hours();
+    const m = minutes();
+    const hour = h > 9 ? h : "0" + h;
+    const minute = m > 9 ? m : "0" + m;
+    props.onChange(`${hour}:${minute}`);
   });
 
   return (

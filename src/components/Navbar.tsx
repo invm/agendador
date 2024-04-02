@@ -16,19 +16,20 @@ const Navbar = (props: NavbarProps) => {
           <a class="text-lg font-bold text-info">{t("title")}</a>
           <Show when={props.valid()}>
             <div class="px-10">
-              <a class="btn btn-sm btn-info">{t("generate")}</a>
+              <a
+                onClick={() => {
+                  props.generate();
+                }}
+                class="btn btn-sm btn-info"
+              >
+                {t("generate")}
+              </a>
             </div>
           </Show>
         </div>
         <div class="flex justify-end flex-1 px-2">
           <div class="flex items-stretch">
             <div class="dropdown dropdown-end">
-              <a
-                onClick={() => props.insertDemoData()}
-                class="btn btn-ghost rounded-btn btn-sm hover:text-info"
-              >
-                {t("demo")}
-              </a>
               <a
                 onClick={() =>
                   //@ts-ignore

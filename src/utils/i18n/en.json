@@ -20,6 +20,8 @@
     "copy_as_csv": "Copy as CSV",
     "export": "Export spreadsheet",
     "config": "Config",
-    "days_to_generate": "Days to generate"
+    "days_to_generate": "Days to generate",
+    "hours": "Hours",
+    "minutes": "Minutes"
   }
 }

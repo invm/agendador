@@ -1,11 +1,15 @@
 import { createStore } from "solid-js/store";
 
 import AgGridSolid from "ag-grid-solid";
-import { getShifts } from "../logic";
+import { InputStation, getShifts } from "../logic";
 import { csvToJson } from "../utils/utils";
 import Navbar from "./Navbar";
 import { Show, createEffect, createSignal } from "solid-js";
 import { Actions } from "./Actions";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
 
 type GridProps = {
   changeLang: (lng: "he" | "en") => void;
@@ -31,12 +35,24 @@ export type PersonKeys = keyof Person;
 export type StationKeys = keyof Station;
 
 const Grid = (props: GridProps) => {
-  const [stations, setStations] = createStore<Station[]>([]);
-  const [people, setPeople] = createStore<Person[]>([]);
+  const [stations, setStations] = createStore<Station[]>([
+    ...Array.from({ length: 2 }, (_, i) => ({
+      name: `Station ${i}`,
+      start: "06:00",
+      end: "06:00",
+      minPeople: 2,
+      shiftTime: 360,
+      shiftInterval: "m",
+    })),
+  ]);
+  const [people, setPeople] = createStore<Person[]>([
+    ...Array.from({ length: 10 }, (_, i) => ({ name: `Person ${i}`, id: i })),
+  ]);
   const [valid, setValid] = createSignal(false);
   const [days, setDays] = createSignal(1);
   const [headers, setHeaders] = createSignal<string[]>([]);
   const [rows, setRows] = createStore<Record<string, string>[]>([]);
+  const [colDef, setColDef] = createStore<Record<string, string>[]>([]);
 
   createEffect(() => {
     setValid(stations.length > 0 && people.length > 0);
@@ -127,17 +143,12 @@ const Grid = (props: GridProps) => {
 
   const generate = () => {
     const { headers: _headers, rows: _rows } = csvToJson(
-      getShifts({ stations, people, days: days() }),
+      getShifts({ stations: stations as InputStation[], people, days: days() }),
     );
+    console.log({ _headers, _rows });
     setHeaders(_headers);
     setRows(_rows);
-  };
-
-  const getColumnDef = () => {
-    return [];
-    return headers().length
-      ? headers().map((field: string) => ({ field }))
-      : [];
+    setColDef(headers().map((field: string) => ({ field })));
   };
 
   return (
@@ -163,7 +174,7 @@ const Grid = (props: GridProps) => {
       <main class="p-5">
         <div class="ag-theme-alpine" style={{ height: "700px" }}>
           <AgGridSolid
-            columnDefs={[]}
+            columnDefs={colDef}
             rowData={rows}
             enableRtl={props.dir === "rtl"}
             ref={gridRef}
