@@ -1,14 +1,11 @@
 import { For, createEffect, createSignal } from "solid-js";
 import { t } from "../utils/i18n";
+import dayjs, { Dayjs } from "dayjs";
+import { newDate } from "../utils/utils";
 
 type TimePickerProps = {
-  onChange: (time: string) => void;
-  value: string;
-};
-
-const getTime = (time: string) => {
-  const [hours, minutes] = time.split(":");
-  return { hours: parseInt(hours), minutes: parseInt(minutes) };
+  onChange: (time: Dayjs) => void;
+  value: Dayjs;
 };
 
 export const TimePicker = (props: TimePickerProps) => {
@@ -16,11 +13,7 @@ export const TimePicker = (props: TimePickerProps) => {
   const [minutes, setMinutes] = createSignal(0);
 
   createEffect(() => {
-    const h = getTime(props.value).hours;
-    const m = getTime(props.value).minutes;
-    const hour = h > 9 ? h : "0" + h;
-    const minute = m > 9 ? m : "0" + m;
-    props.onChange(`${hour}:${minute}`);
+    props.onChange(newDate(dayjs(), hours(), minutes()));
   });
 
   return (

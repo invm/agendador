@@ -2,6 +2,7 @@ import { Accessor, For, Setter } from "solid-js";
 import { t } from "../utils/i18n";
 import { TimePicker } from "./TimePicker";
 import { Person, PersonKeys, Station, StationKeys } from "./Grid";
+import { Dayjs } from "dayjs";
 
 export type ConfigModalProps = {
   stations: Station[];
@@ -10,7 +11,7 @@ export type ConfigModalProps = {
   onChangeStation: (
     index: number,
     key: StationKeys,
-    value: string | number,
+    value: string | number | Dayjs,
   ) => void;
   people: Person[];
   addPerson: () => void;
@@ -142,7 +143,7 @@ const ConfigModal = (props: ConfigModalProps) => {
                             </div>
                             <TimePicker
                               value={station.start}
-                              onChange={(e: string) => {
+                              onChange={(e: Dayjs) => {
                                 props.onChangeStation(i(), "start", e);
                               }}
                             />
@@ -153,7 +154,7 @@ const ConfigModal = (props: ConfigModalProps) => {
                             </div>
                             <TimePicker
                               value={station.end}
-                              onChange={(e: string) => {
+                              onChange={(e: Dayjs) => {
                                 props.onChangeStation(i(), "end", e);
                               }}
                             />

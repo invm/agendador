@@ -2,11 +2,11 @@ import { createStore } from "solid-js/store";
 
 import AgGridSolid from "ag-grid-solid";
 import { InputStation, getShifts } from "../logic";
-import { csvToJson } from "../utils/utils";
+import { csvToJson, newDate } from "../utils/utils";
 import Navbar from "./Navbar";
 import { Show, createEffect, createSignal } from "solid-js";
 import { Actions } from "./Actions";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
 dayjs.extend(customParseFormat);
@@ -18,8 +18,8 @@ type GridProps = {
 
 export type Station = {
   name: string;
-  start: string;
-  end: string;
+  start: Dayjs;
+  end: Dayjs;
   minPeople: number;
   shiftTime: number;
 };
@@ -37,17 +37,24 @@ const Grid = (props: GridProps) => {
   const [stations, setStations] = createStore<Station[]>([
     {
       name: `Station 1h`,
-      start: "06:00",
-      end: "06:00",
+      start: newDate(dayjs(), 6, 0),
+      end: newDate(dayjs().add(1, "d"), 6, 0),
       minPeople: 2,
       shiftTime: 60,
     },
     {
-      name: `Station 30m`,
-      start: "06:00",
-      end: "18:00",
+      name: `Station 2h`,
+      start: newDate(dayjs(), 6, 0),
+      end: newDate(dayjs(), 18, 0),
       minPeople: 2,
-      shiftTime: 30,
+      shiftTime: 120,
+    },
+    {
+      name: `Station 90m`,
+      start: newDate(dayjs(), 18, 0),
+      end: newDate(dayjs().add(1, "d"), 6, 0),
+      minPeople: 2,
+      shiftTime: 90,
     },
   ]);
   const [people, setPeople] = createStore<Person[]>([
@@ -66,8 +73,8 @@ const Grid = (props: GridProps) => {
   const addStation = () => {
     const newStation = {
       name: "Station 1",
-      start: "06:00",
-      end: "06:00",
+      start: newDate(dayjs(), 6, 0),
+      end: newDate(dayjs().add(1, "d"), 6, 0),
       minPeople: 2,
       shiftTime: 360,
     };
@@ -93,7 +100,7 @@ const Grid = (props: GridProps) => {
   const onChangeStation = (
     index: number,
     key: StationKeys,
-    value: string | number,
+    value: string | number | Dayjs,
   ) => {
     setStations(index, key, value);
   };
@@ -113,8 +120,8 @@ const Grid = (props: GridProps) => {
     setStations([
       ...Array.from({ length: 2 }, (_, i) => ({
         name: `Station ${i}`,
-        start: "06:00",
-        end: "06:00",
+        start: newDate(dayjs(), 6, 0),
+        end: newDate(dayjs().add(1, "d"), 6, 0),
         minPeople: 2,
         shiftTime: 360,
       })),

@@ -1,6 +1,7 @@
-import dayjs, { Dayjs, ManipulateType } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import _ from "lodash";
 import { Person, Station } from "./components/Grid";
+import { newDate } from "./utils/utils";
 
 const TF = "HH:mm";
 
@@ -16,9 +17,6 @@ const TIME_FORMAT = "DD/MM HH:mm";
 const WEIGHT_REST = 1;
 // const WEIGHT_SAME_PERSON = -4;
 // const WEIGHT_SAME_HOUR = -4;
-
-const setHour = (date: Dayjs, h: number, m: number) =>
-  date.set("h", h).set("m", m).set("s", 0).set("ms", 0);
 
 type Shift = {
   minPeople: number;
@@ -117,8 +115,13 @@ const populateOnDuty = ({
         onDuty,
         shiftTime,
       });
-      person.rest = person.rest ? person.rest + restPeriod : restPeriod;
-      return { ...person, cost, restPeriod, totalShifts };
+      return {
+        ...person,
+        cost,
+        restPeriod,
+        totalShifts,
+        rest: person.rest ? person.rest + restPeriod : restPeriod,
+      };
     });
     people = _.orderBy(
       people,
@@ -145,8 +148,6 @@ const shouldPopulateShift = ({
     ((current.valueOf() - scheduleStart.startOf("d").valueOf()) / 60000) %
     shiftTime;
 
-  console.log({ a, shiftTime });
-
   return a === 0;
   // FIX: this probably does not wwork now
   // const h = scheduleStartTime.get("h");
@@ -169,55 +170,52 @@ const shouldPopulateShift = ({
 
 const analyzeStations = (stations: InputStation[]) => {
   // the step will always be the lowest shift time between
-  const [scheduleStart, scheduleEnd, step] = stations.reduce(
-    ([min, max, step], curr) => {
+  const [scheduleStart, scheduleEnd, steps] = stations.reduce(
+    ([min, max, steps], curr) => {
       if (dayjs(curr.start, TF).isBefore(min)) {
         min = dayjs(curr.start, TF);
       }
       if (dayjs(curr.start, TF).isAfter(max)) {
         max = dayjs(curr.start);
       }
-      if (curr.shiftTime < step) {
-        step = curr.shiftTime;
-      }
-      return [min, max, step];
+      steps.push(curr.shiftTime);
+      return [min, max, steps];
     },
     [
       dayjs(stations[0].start, TF),
       dayjs(stations[0].start, TF),
-      stations[0].shiftTime,
+      [] as number[],
     ],
   );
-  return { scheduleStart, scheduleEnd, step };
+  return { scheduleStart, scheduleEnd, steps };
 };
 
 const generate = ({ stations, people, days }: GenerateProps) => {
   const shifts: Shift[] = [];
-  const { scheduleEnd, scheduleStart, step } = analyzeStations(stations);
+  const { scheduleEnd, scheduleStart, steps } = analyzeStations(stations);
   let s = scheduleStart;
 
   // TODO: concat to already provided input and change start to be the start of input
-  const endTime = setHour(
+  const endTime = newDate(
     dayjs(),
     scheduleEnd.get("h"),
     scheduleEnd.get("m"),
   ).add(days, "d");
 
   while (s.isBefore(endTime)) {
+    // TODO: for each step create row
+    // steps.forEach(step => {
+    //
+    // })
+
     // TODO: add randomness element and keep track for next cycle to not fuck the same person again
     for (let i = 0; i < stations.length; i++) {
-      const { minPeople, name, shiftTime, start, end } = stations[i];
+      // TODO: use start and end to not populate shifts at downtimes
+      const { minPeople, name, shiftTime } = stations[i];
       // it is initial because it will change in case the same people
       const should = shouldPopulateShift({
         scheduleStart,
         current: s,
-        shiftTime,
-      });
-      console.log({
-        should,
-        scheduleStart: s.format(),
-        start,
-        end,
         shiftTime,
       });
       if (should) {
@@ -234,7 +232,7 @@ const generate = ({ stations, people, days }: GenerateProps) => {
       }
     }
 
-    s = s.add(step, "m");
+    s = s.add(steps[0], "m");
   }
 
   console.log({ shifts });
