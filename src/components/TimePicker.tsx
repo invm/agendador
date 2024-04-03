@@ -12,12 +12,12 @@ const getTime = (time: string) => {
 };
 
 export const TimePicker = (props: TimePickerProps) => {
-  const [hours, setHours] = createSignal(getTime(props.value).hours);
-  const [minutes, setMinutes] = createSignal(getTime(props.value).minutes);
+  const [hours, setHours] = createSignal(0);
+  const [minutes, setMinutes] = createSignal(0);
 
   createEffect(() => {
-    const h = hours();
-    const m = minutes();
+    const h = getTime(props.value).hours;
+    const m = getTime(props.value).minutes;
     const hour = h > 9 ? h : "0" + h;
     const minute = m > 9 ? m : "0" + m;
     props.onChange(`${hour}:${minute}`);

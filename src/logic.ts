@@ -1,4 +1,4 @@
-import dayjs, { Dayjs, ManipulateType, OpUnitType } from "dayjs";
+import dayjs, { Dayjs, ManipulateType } from "dayjs";
 import _ from "lodash";
 import { Person, Station } from "./components/Grid";
 
@@ -16,8 +16,6 @@ const TIME_FORMAT = "DD/MM HH:mm";
 const WEIGHT_REST = 1;
 // const WEIGHT_SAME_PERSON = -4;
 // const WEIGHT_SAME_HOUR = -4;
-const INTERVAL = "h";
-const INTERVAL_TIME = 1;
 
 const setHour = (date: Dayjs, h: number, m: number) =>
   date.set("h", h).set("m", m).set("s", 0).set("ms", 0);
@@ -29,51 +27,7 @@ type Shift = {
   start: string;
   onDuty: Person[];
   shiftTime: number;
-  shiftInterval: string;
 };
-
-// const stations = [
-//   {
-//     name: "gate",
-//     start: 6,
-//     end: 6,
-//     minPeople: 2,
-//     shiftTime: 6,
-//     shiftInterval: "h",
-//   },
-//   {
-//     name: "viewpoint",
-//     start: 6,
-//     end: 18,
-//     minPeople: 1,
-//     shiftTime: 4,
-//     shiftInterval: "h",
-//   },
-//   {
-//     name: "patrol",
-//     start: 18,
-//     end: 6,
-//     minPeople: 2,
-//     shiftTime: 6,
-//     shiftInterval: "h",
-//   },
-//   {
-//     name: "barricade-a",
-//     start: 6,
-//     end: 18,
-//     minPeople: 2,
-//     shiftTime: 6,
-//     shiftInterval: "h",
-//   },
-//   {
-//     name: "barricade-b",
-//     start: 6,
-//     end: 18,
-//     minPeople: 2,
-//     shiftTime: 6,
-//     shiftInterval: "h",
-//   },
-// ];
 
 type getCostArgs = {
   person: Person;
@@ -82,7 +36,6 @@ type getCostArgs = {
   minPeople: number;
   onDuty: Person[];
   shiftTime: number;
-  shiftInterval: string;
 };
 
 const getCost = (args: getCostArgs) => {
@@ -93,7 +46,6 @@ const getCost = (args: getCostArgs) => {
     // minPeople,
     onDuty,
     shiftTime,
-    shiftInterval,
   } = args;
   const lastShifts = _.filter(
     _.reverse(_.cloneDeep(shifts)),
@@ -102,11 +54,7 @@ const getCost = (args: getCostArgs) => {
   if (_.find(onDuty, { id: person.id }))
     return { cost: -Infinity, restPeriod: 0 };
   if (!lastShifts.length) return { cost: Infinity, restPeriod: 0 };
-  const restPeriod =
-    startTime.diff(
-      lastShifts[0].startTime,
-      shiftInterval as unknown as OpUnitType,
-    ) - shiftTime;
+  const restPeriod = startTime.diff(lastShifts[0].startTime, "m") - shiftTime;
   // const sameShiftHour = startTime.get("h") === lastShifts[0].startTime.get("h");
   // const sameShiftPersons =
   //   onDuty.length < minPeople && onDuty.length > 0
@@ -120,14 +68,7 @@ const getCost = (args: getCostArgs) => {
         return acc;
       }
       const prev = arr[i - 1];
-      return (
-        acc +
-        curr.startTime.diff(
-          prev.startTime,
-          shiftInterval as unknown as OpUnitType,
-        ) -
-        shiftTime
-      );
+      return acc + curr.startTime.diff(prev.startTime, "m") - shiftTime;
     },
     0,
   );
@@ -156,7 +97,6 @@ type populateOnDutyProps = {
   minPeople: number;
   onDuty: Person[];
   shiftTime: number;
-  shiftInterval: string;
 };
 
 const populateOnDuty = ({
@@ -166,7 +106,6 @@ const populateOnDuty = ({
   minPeople,
   onDuty,
   shiftTime,
-  shiftInterval,
 }: populateOnDutyProps) => {
   while (onDuty.length < minPeople) {
     people = people.map((person) => {
@@ -177,7 +116,6 @@ const populateOnDuty = ({
         minPeople,
         onDuty,
         shiftTime,
-        shiftInterval,
       });
       person.rest = person.rest ? person.rest + restPeriod : restPeriod;
       return { ...person, cost, restPeriod, totalShifts };
@@ -193,52 +131,70 @@ const populateOnDuty = ({
 };
 
 type shouldPopulateShiftProps = {
-  scheduleStartTime: Dayjs;
-  start: number;
-  end: number;
+  scheduleStart: Dayjs;
+  current: Dayjs;
   shiftTime: number;
 };
 
 const shouldPopulateShift = ({
-  scheduleStartTime,
-  start,
-  end,
+  scheduleStart,
+  current,
   shiftTime,
-  // step,
 }: shouldPopulateShiftProps) => {
-  const h = scheduleStartTime.get("h");
-  if (start === end && (h - start) % shiftTime === 0) {
-    return true;
-  } else if (
-    start > end &&
-    (h >= start || h < end) &&
-    (h - start) % shiftTime === 0
-  ) {
-    return true;
-  } else if (h >= start && h < end) {
-    if ((h - start) % shiftTime === 0) {
-      return true;
-    }
-    return false;
-  }
-  return false;
+  const a =
+    ((current.valueOf() - scheduleStart.startOf("d").valueOf()) / 60000) %
+    shiftTime;
+
+  console.log({ a, shiftTime });
+
+  return a === 0;
+  // FIX: this probably does not wwork now
+  // const h = scheduleStartTime.get("h");
+  // if (start === end && (h - start) % shiftTime === 0) {
+  //   return true;
+  // } else if (
+  //   start > end &&
+  //   (h >= start || h < end) &&
+  //   (h - start) % shiftTime === 0
+  // ) {
+  //   return true;
+  // } else if (h >= start && h < end) {
+  //   if ((h - start) % shiftTime === 0) {
+  //     return true;
+  //   }
+  //   return false;
+  // }
+  // return false;
 };
 
-const generate = ({ stations, people, days }: GenerateProps) => {
-  const shifts: Shift[] = [];
-  const [_scheduleStart, scheduleEnd] = stations.reduce(
-    ([min, max], curr) => {
+const analyzeStations = (stations: InputStation[]) => {
+  // the step will always be the lowest shift time between
+  const [scheduleStart, scheduleEnd, step] = stations.reduce(
+    ([min, max, step], curr) => {
       if (dayjs(curr.start, TF).isBefore(min)) {
         min = dayjs(curr.start, TF);
       }
       if (dayjs(curr.start, TF).isAfter(max)) {
         max = dayjs(curr.start);
       }
-      return [min, max];
+      if (curr.shiftTime < step) {
+        step = curr.shiftTime;
+      }
+      return [min, max, step];
     },
-    [dayjs(stations[0].start, TF), dayjs(stations[0].start, TF)],
+    [
+      dayjs(stations[0].start, TF),
+      dayjs(stations[0].start, TF),
+      stations[0].shiftTime,
+    ],
   );
-  let scheduleStartTime = _scheduleStart;
+  return { scheduleStart, scheduleEnd, step };
+};
+
+const generate = ({ stations, people, days }: GenerateProps) => {
+  const shifts: Shift[] = [];
+  const { scheduleEnd, scheduleStart, step } = analyzeStations(stations);
+  let s = scheduleStart;
 
   // TODO: concat to already provided input and change start to be the start of input
   const endTime = setHour(
@@ -247,32 +203,19 @@ const generate = ({ stations, people, days }: GenerateProps) => {
     scheduleEnd.get("m"),
   ).add(days, "d");
 
-  // TODO: calculate step and interval from in the stations above
-  const [step, interval] = [INTERVAL_TIME, INTERVAL];
-
-  console.log({
-    scheduleStartTime,
-    scheduleEndTime: scheduleEnd,
-    step,
-    interval,
-    stations,
-    people,
-  });
-
-  while (scheduleStartTime.isBefore(endTime)) {
+  while (s.isBefore(endTime)) {
     // TODO: add randomness element and keep track for next cycle to not fuck the same person again
     for (let i = 0; i < stations.length; i++) {
-      const { minPeople, name, shiftTime, shiftInterval, start, end } =
-        stations[i];
+      const { minPeople, name, shiftTime, start, end } = stations[i];
       // it is initial because it will change in case the same people
       const should = shouldPopulateShift({
-        scheduleStartTime,
-        start,
-        end,
+        scheduleStart,
+        current: s,
         shiftTime,
       });
       console.log({
-        scheduleStartTime,
+        should,
+        scheduleStart: s.format(),
         start,
         end,
         shiftTime,
@@ -280,19 +223,18 @@ const generate = ({ stations, people, days }: GenerateProps) => {
       if (should) {
         const shift = {
           // start: scheduleStartTime.format(TIME_FORMAT),
-          start: scheduleStartTime.format(TIME_FORMAT),
-          startTime: scheduleStartTime,
+          start: s.format(TIME_FORMAT),
+          startTime: s,
           name,
           minPeople,
           shiftTime,
-          shiftInterval,
           onDuty: [],
         };
         shifts.push(shift);
       }
     }
 
-    scheduleStartTime = scheduleStartTime.add(step, interval as ManipulateType);
+    s = s.add(step, "m");
   }
 
   console.log({ shifts });
@@ -300,8 +242,7 @@ const generate = ({ stations, people, days }: GenerateProps) => {
   const allShifts = [];
 
   for (let i = 0; i < shifts.length; i++) {
-    const { minPeople, shiftTime, shiftInterval, startTime, ...shift } =
-      shifts[i];
+    const { minPeople, shiftTime, startTime, ...shift } = shifts[i];
     const onDuty: Person[] = [];
     populateOnDuty({
       startTime,
@@ -310,13 +251,11 @@ const generate = ({ stations, people, days }: GenerateProps) => {
       minPeople,
       onDuty,
       shiftTime,
-      shiftInterval,
     });
     allShifts.push({
       ...shift,
       onDuty,
       shiftTime,
-      shiftInterval,
       startTime,
       minPeople,
     });
@@ -393,7 +332,6 @@ const generate = ({ stations, people, days }: GenerateProps) => {
 //     _.cloneDeep(shifts).map((s) => {
 //       s.onDuty = s.onDuty.map((p) => p.name);
 //       delete s.shiftTime;
-//       delete s.shiftInterval;
 //       delete s.startTime;
 //       return s;
 //     }),

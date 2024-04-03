@@ -115,12 +115,20 @@ const ConfigModal = (props: ConfigModalProps) => {
                               type="number"
                               value={station.shiftTime}
                               min={15}
+                              step={15}
                               max={1440}
+                              onMouseOut={() => {
+                                props.onChangeStation(
+                                  i(),
+                                  "shiftTime",
+                                  Math.floor(station.shiftTime / 15) * 15,
+                                );
+                              }}
                               onChange={(e) => {
                                 props.onChangeStation(
                                   i(),
                                   "shiftTime",
-                                  +e.target.value,
+                                  Math.floor(+e.target.value / 15) * 15,
                                 );
                               }}
                               class="input input-bordered input-sm w-full max-w-xs"

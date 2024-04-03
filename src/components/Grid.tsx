@@ -22,7 +22,6 @@ export type Station = {
   end: string;
   minPeople: number;
   shiftTime: number;
-  shiftInterval: string;
 };
 
 export type Person = {
@@ -36,14 +35,20 @@ export type StationKeys = keyof Station;
 
 const Grid = (props: GridProps) => {
   const [stations, setStations] = createStore<Station[]>([
-    ...Array.from({ length: 2 }, (_, i) => ({
-      name: `Station ${i}`,
+    {
+      name: `Station 1h`,
       start: "06:00",
       end: "06:00",
       minPeople: 2,
-      shiftTime: 360,
-      shiftInterval: "m",
-    })),
+      shiftTime: 60,
+    },
+    {
+      name: `Station 30m`,
+      start: "06:00",
+      end: "18:00",
+      minPeople: 2,
+      shiftTime: 30,
+    },
   ]);
   const [people, setPeople] = createStore<Person[]>([
     ...Array.from({ length: 10 }, (_, i) => ({ name: `Person ${i}`, id: i })),
@@ -65,7 +70,6 @@ const Grid = (props: GridProps) => {
       end: "06:00",
       minPeople: 2,
       shiftTime: 360,
-      shiftInterval: "m",
     };
     setStations([...stations, newStation]);
   };
@@ -113,7 +117,6 @@ const Grid = (props: GridProps) => {
         end: "06:00",
         minPeople: 2,
         shiftTime: 360,
-        shiftInterval: "m",
       })),
     ]);
   };
@@ -150,6 +153,10 @@ const Grid = (props: GridProps) => {
     setRows(_rows);
     setColDef(headers().map((field: string) => ({ field })));
   };
+
+  createEffect(() => {
+    generate();
+  });
 
   return (
     <>
