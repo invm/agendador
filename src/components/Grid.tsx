@@ -8,6 +8,7 @@ import { Show, createEffect, createSignal } from "solid-js";
 import { Actions } from "./Actions";
 import dayjs, { Dayjs } from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { CellEditingStoppedEvent, ColDef } from "ag-grid-community";
 
 dayjs.extend(customParseFormat);
 
@@ -64,7 +65,7 @@ const Grid = (props: GridProps) => {
   const [days, setDays] = createSignal(1);
   const [headers, setHeaders] = createSignal<string[]>([]);
   const [rows, setRows] = createStore<Record<string, string>[]>([]);
-  const [colDef, setColDef] = createStore<Record<string, string>[]>([]);
+  const [colDef, setColDef] = createStore<ColDef[]>([]);
 
   createEffect(() => {
     setValid(stations.length > 0 && people.length > 0);
@@ -157,13 +158,15 @@ const Grid = (props: GridProps) => {
     );
     console.log({ _headers, _rows });
     setHeaders(_headers);
-    setRows(_rows);
     setColDef(headers().map((field: string) => ({ field })));
+    setRows(_rows);
   };
 
   createEffect(() => {
     generate();
   });
+
+  const onCellEditingStopped = (_e: CellEditingStoppedEvent) => {};
 
   return (
     <>
@@ -192,9 +195,19 @@ const Grid = (props: GridProps) => {
             rowData={rows}
             enableRtl={props.dir === "rtl"}
             ref={gridRef}
-            enableCellTextSelection={true}
+            noRowsOverlayComponent={() => (
+              <div>
+                <h2>TODO: add instructions</h2>
+              </div>
+            )}
             rowSelection="multiple"
             defaultColDef={defaultColDef}
+            enableCellChangeFlash={true}
+            enableCellTextSelection={true}
+            undoRedoCellEditing={true}
+            suppressExcelExport={true}
+            suppressCsvExport={false}
+            onCellEditingStopped={onCellEditingStopped}
           />
         </div>
         <Show when={rows.length}>

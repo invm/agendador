@@ -1,6 +1,6 @@
 {
   "translation": {
-    "title": "Agendador",
+    "title": "What? When?",
     "description": "Plan shifts for your team",
     "language": "Language",
     "stations": "Stations",
@@ -22,6 +22,7 @@
     "config": "Config",
     "days_to_generate": "Days to generate",
     "hours": "Hours",
-    "minutes": "Minutes"
+    "minutes": "Minutes",
+    "removing_person": "Removing a person from a single row will require re-evaluation of all rows below"
   }
 }
