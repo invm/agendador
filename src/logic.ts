@@ -168,6 +168,16 @@ const shouldPopulateShift = ({
   // return false;
 };
 
+const getCommonDenominator = (arr: number[]) => {
+  const gcd = (a: number, b: number): number => {
+    if (b === 0) {
+      return a;
+    }
+    return gcd(b, a % b);
+  };
+  return arr.reduce((acc, curr) => gcd(acc, curr), 0);
+};
+
 const analyzeStations = (stations: InputStation[]) => {
   // the step will always be the lowest shift time between
   const [scheduleStart, scheduleEnd, steps] = stations.reduce(
@@ -187,12 +197,13 @@ const analyzeStations = (stations: InputStation[]) => {
       [] as number[],
     ],
   );
-  return { scheduleStart, scheduleEnd, steps };
+  const commonDenominator = getCommonDenominator(steps);
+  return { scheduleStart, scheduleEnd, step: commonDenominator };
 };
 
 const generate = ({ stations, people, days }: GenerateProps) => {
   const shifts: Shift[] = [];
-  const { scheduleEnd, scheduleStart, steps } = analyzeStations(stations);
+  const { scheduleEnd, scheduleStart, step } = analyzeStations(stations);
   let s = scheduleStart;
 
   // TODO: concat to already provided input and change start to be the start of input
@@ -203,11 +214,6 @@ const generate = ({ stations, people, days }: GenerateProps) => {
   ).add(days, "d");
 
   while (s.isBefore(endTime)) {
-    // TODO: for each step create row
-    // steps.forEach(step => {
-    //
-    // })
-
     // TODO: add randomness element and keep track for next cycle to not fuck the same person again
     for (let i = 0; i < stations.length; i++) {
       // TODO: use start and end to not populate shifts at downtimes
@@ -232,7 +238,7 @@ const generate = ({ stations, people, days }: GenerateProps) => {
       }
     }
 
-    s = s.add(steps[0], "m");
+    s = s.add(step, "m");
   }
 
   console.log({ shifts });
